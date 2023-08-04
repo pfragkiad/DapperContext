@@ -1,4 +1,4 @@
-# DapperContext
+# DapperContextAlt
 
 *The simplest/fastest alternative to Entity Framework context, based entirely on Dapper.*
 
@@ -6,10 +6,13 @@
 
 Via tha Package Manager:
 ```powershell
-Install-Package DapperContext
+Install-Package DapperContextAlt
 ```
 
 Via the .NET CLI
 ```bat
-dotnet add package DapperContext
+dotnet add package DapperContextAlt
 ```
+
+
+*Documentation is pending... Stay tuned!*
