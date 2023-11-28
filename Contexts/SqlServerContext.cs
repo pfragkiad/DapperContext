@@ -11,6 +11,7 @@ public class SqlServerContext : DbContext
     public SqlServerContext(string connectionString)
     {
         _connectionString = connectionString;
+        SqlMapper.Settings.CommandTimeout = 150;
     }
 
     public override IDbConnection Connect() => new SqlConnection(_connectionString);
