@@ -11,8 +11,8 @@ public interface IDbContext
     #region Generic data operations
 
     Task<int> Execute(string sql, object? parameters = null, IDbTransaction? transaction = null);
-    Task<T> ExecuteScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null);
-    Task<T> QueryFirst<T>(string sql, object? parameters = null, IDbTransaction? transaction = null);
+    Task<T?> ExecuteScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null);
+    Task<T?> QueryFirst<T>(string sql, object? parameters = null, IDbTransaction? transaction = null);
     Task<IEnumerable<T>> Query<T>(string sql, object? parameters = null, IDbTransaction? transaction = null);
     Task<IEnumerable<T>> QueryProcedure<T>(string sql, object? parameters = null, IDbTransaction? transaction = null);
     Task<T?> QueryProcedureScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null) where T : struct;
@@ -40,8 +40,8 @@ public interface IDbContext
     DataTable InitializeDatatable<TEntity>(IEnumerable<TEntity> items);
     string GetNewTempTableName(IDbConnection connection, string tableNamePrefix);
     string GetNewTempTableName(string tableNamePrefix);
-    Task<(int Updated, int Added)> UpdateOldAndAddNew<T>(IEnumerable<T> items, string mainTable, string createTableSqlBody, string addAndUpdateSql,
-        Func<IEnumerable<T>, string, Task>? PostAction = null);
+    Task<(int Updated, int Added)> UpdateOldAndAddNew<T>(List<T> items, string mainTable, string createTableSqlBody, string addAndUpdateSql,
+        Func<List<T>, string, Task>? PostAction = null);
 
     #endregion
 }

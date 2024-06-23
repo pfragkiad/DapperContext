@@ -28,27 +28,27 @@ public abstract class DbContext : IDbContext
             using IDbConnection connection = Connect();
             return await connection.ExecuteAsync(sql, parameters);
         }
-        return await transaction.Connection.ExecuteAsync(sql, parameters, transaction);
+        return await transaction.Connection!.ExecuteAsync(sql, parameters, transaction);
     }
 
-    public async Task<T> ExecuteScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
+    public async Task<T?> ExecuteScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
             return await connection.ExecuteScalarAsync<T>(sql, parameters);
         }
-        return await transaction.Connection.ExecuteScalarAsync<T>(sql, parameters, transaction);
+        return await transaction.Connection!.ExecuteScalarAsync<T>(sql, parameters, transaction);
     }
 
-    public async Task<T> QueryFirst<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
+    public async Task<T?> QueryFirst<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
             return await connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
         }
-        return await transaction.Connection.QueryFirstOrDefaultAsync<T>(sql, parameters, transaction);
+        return await transaction.Connection!.QueryFirstOrDefaultAsync<T>(sql, parameters, transaction);
     }
 
     public async Task<IEnumerable<T>> Query<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
@@ -58,7 +58,7 @@ public abstract class DbContext : IDbContext
             using IDbConnection connection = Connect();
             return await connection.QueryAsync<T>(sql, parameters);
         }
-        return await transaction.Connection.QueryAsync<T>(sql, parameters, transaction);
+        return await transaction.Connection!.QueryAsync<T>(sql, parameters, transaction);
     }
 
     public async Task<IEnumerable<T>> QueryProcedure<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
@@ -68,7 +68,7 @@ public abstract class DbContext : IDbContext
             using IDbConnection connection = Connect();
             return await connection.QueryAsync<T>(sql, parameters, commandType: CommandType.StoredProcedure);
         }
-        return await transaction.Connection.QueryAsync<T>(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
+        return await transaction.Connection!.QueryAsync<T>(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
     }
     public async Task<T?> QueryProcedureScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null) where T : struct
     {
@@ -77,7 +77,7 @@ public abstract class DbContext : IDbContext
             using IDbConnection connection = Connect();
             return await connection.ExecuteScalarAsync<T?>(sql, parameters, commandType: CommandType.StoredProcedure);
         }
-        return await transaction.Connection.ExecuteScalarAsync<T?>(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
+        return await transaction.Connection!.ExecuteScalarAsync<T?>(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
     }
     public async Task<int> ExecuteProcedure(string sql, object? parameters = null, IDbTransaction? transaction = null)
     {
@@ -86,7 +86,7 @@ public abstract class DbContext : IDbContext
             using IDbConnection connection = Connect();
             return await connection.ExecuteAsync(sql, parameters,  commandType: CommandType.StoredProcedure);
         }
-        return await transaction.Connection.ExecuteAsync(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
+        return await transaction.Connection!.ExecuteAsync(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
     }
 
     public virtual async Task<IEnumerable<T>> QueryTable<T>(string tableName, IDbTransaction? transaction = null) =>
@@ -232,8 +232,8 @@ public abstract class DbContext : IDbContext
     }
 
     public async Task<(int Updated, int Added)> UpdateOldAndAddNew<T>(
-        IEnumerable<T> items, string mainTable, string createTableSqlBody, string addAndUpdateSql,
-        Func<IEnumerable<T>, string, Task>? PostAction = null)
+        List<T> items, string mainTable, string createTableSqlBody, string addAndUpdateSql,
+        Func<List<T>, string, Task>? PostAction = null)
     {
         string tempTable = await InitializeTempTable(items, createTableSqlBody);
 
@@ -243,7 +243,7 @@ public abstract class DbContext : IDbContext
         addAndUpdateSql = addAndUpdateSql.Replace("{tempTable}", tempTable).Replace("{Table}", mainTable).Replace("{tempOld}", tempOld);
 
         var connection = Connect();
-        var counts = (await connection.QueryAsync<int>(addAndUpdateSql)).ToArray();
+        int[] counts = (await connection.QueryAsync<int>(addAndUpdateSql)).ToArray();
 
         if (PostAction is not null) await PostAction(items, tempTable);
 
@@ -251,7 +251,7 @@ public abstract class DbContext : IDbContext
         await Execute($"drop table if exists {tempOld}");
 
 
-        return counts.Length == 1 ? (counts[0], items.Count() - counts[0]) : (counts[0], counts[1]);
+        return counts.Length == 1 ? (counts[0], items.Count - counts[0]) : (counts[0], counts[1]);
 
     }
 

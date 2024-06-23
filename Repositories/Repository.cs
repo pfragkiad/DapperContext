@@ -77,7 +77,7 @@ protected override Func<IEnumerable<Vehicle>, string, Task>? PostUpdateAction =>
      */
     protected virtual Func<IEnumerable<T>, string, Task>? PostUpdateAction { get; }
 
-    public async Task<(int Updated, int Added)> UpdateOldAndAddNew(IEnumerable<T> items, bool updateIds)
+    public async Task<(int Updated, int Added)> UpdateOldAndAddNew(List<T> items, bool updateIds)
         => await _context.UpdateOldAndAddNew(
             items,
             MainTable,
