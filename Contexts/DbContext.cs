@@ -21,85 +21,86 @@ public abstract class DbContext : IDbContext
 
     #region Generic data operations
 
-    public async Task<int> Execute(string sql, object? parameters = null, IDbTransaction? transaction = null)
+    public async Task<int> Execute(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = null)
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
-            return await connection.ExecuteAsync(sql, parameters);
+            return await connection.ExecuteAsync(sql, parameters, commandTimeout: commandTimeout);
         }
-        return await transaction.Connection!.ExecuteAsync(sql, parameters, transaction);
+        return await transaction.Connection!.ExecuteAsync(sql, parameters, transaction, commandTimeout);
     }
 
-    public async Task<T?> ExecuteScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
+    public async Task<T?> ExecuteScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = null)
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
-            return await connection.ExecuteScalarAsync<T>(sql, parameters);
+            return await connection.ExecuteScalarAsync<T>(sql, parameters, commandTimeout: commandTimeout);
         }
-        return await transaction.Connection!.ExecuteScalarAsync<T>(sql, parameters, transaction);
+        return await transaction.Connection!.ExecuteScalarAsync<T>(sql, parameters, transaction, commandTimeout);
     }
 
-    public async Task<T?> QueryFirst<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
+    public async Task<T?> QueryFirst<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = null)
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
-            return await connection.QueryFirstOrDefaultAsync<T>(sql, parameters);
+
+            return await connection.QueryFirstOrDefaultAsync<T>(sql, parameters, commandTimeout: commandTimeout);
         }
-        return await transaction.Connection!.QueryFirstOrDefaultAsync<T>(sql, parameters, transaction);
+        return await transaction.Connection!.QueryFirstOrDefaultAsync<T>(sql, parameters, transaction, commandTimeout: commandTimeout);
     }
 
-    public async Task<IEnumerable<T>> Query<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
+    public async Task<IEnumerable<T>> Query<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = null)
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
-            return await connection.QueryAsync<T>(sql, parameters);
+            return await connection.QueryAsync<T>(sql, parameters, commandTimeout: commandTimeout);
         }
-        return await transaction.Connection!.QueryAsync<T>(sql, parameters, transaction);
+        return await transaction.Connection!.QueryAsync<T>(sql, parameters, transaction, commandTimeout: commandTimeout);
     }
 
-    public async Task<IEnumerable<T>> QueryProcedure<T>(string sql, object? parameters = null, IDbTransaction? transaction = null)
+    public async Task<IEnumerable<T>> QueryProcedure<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = null)
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
-            return await connection.QueryAsync<T>(sql, parameters, commandType: CommandType.StoredProcedure);
+            return await connection.QueryAsync<T>(sql, parameters, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
         }
-        return await transaction.Connection!.QueryAsync<T>(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
+        return await transaction.Connection!.QueryAsync<T>(sql, parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
     }
-    public async Task<T?> QueryProcedureScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null) where T : struct
+    public async Task<T?> QueryProcedureScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = null) where T : struct
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
-            return await connection.ExecuteScalarAsync<T?>(sql, parameters, commandType: CommandType.StoredProcedure);
+            return await connection.ExecuteScalarAsync<T?>(sql, parameters, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
         }
-        return await transaction.Connection!.ExecuteScalarAsync<T?>(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
+        return await transaction.Connection!.ExecuteScalarAsync<T?>(sql, parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
     }
-    public async Task<int> ExecuteProcedure(string sql, object? parameters = null, IDbTransaction? transaction = null)
+    public async Task<int> ExecuteProcedure(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = null)
     {
         if (transaction is null)
         {
             using IDbConnection connection = Connect();
-            return await connection.ExecuteAsync(sql, parameters,  commandType: CommandType.StoredProcedure);
+            return await connection.ExecuteAsync(sql, parameters, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
         }
-        return await transaction.Connection!.ExecuteAsync(sql, parameters, transaction, commandType: CommandType.StoredProcedure);
+        return await transaction.Connection!.ExecuteAsync(sql, parameters, transaction, commandType: CommandType.StoredProcedure, commandTimeout: commandTimeout);
     }
 
-    public virtual async Task<IEnumerable<T>> QueryTable<T>(string tableName, IDbTransaction? transaction = null) =>
-         await Query<T>($"select * from [{tableName}]",null,transaction);
+    public virtual async Task<IEnumerable<T>> QueryTable<T>(string tableName, IDbTransaction? transaction = null, int? commandTimeout = null) =>
+         await Query<T>($"select * from [{tableName}]", null, transaction);
 
     #endregion
 
     #region CRUD
 
-    public virtual async Task<bool> Delete(int id, string table, IDbTransaction? transaction =null)
+    public virtual async Task<bool> Delete(int id, string table, IDbTransaction? transaction = null)
     {
         string sql = $"delete t from [{table}] where t.id = @id";
-        int rowsAffected = await Execute(sql, new { id },transaction);
+        int rowsAffected = await Execute(sql, new { id }, transaction);
         return rowsAffected > 0;
     }
 
@@ -110,8 +111,8 @@ public abstract class DbContext : IDbContext
         return entity;
     }
 
-    public virtual async Task<IEnumerable<TEntity>> GetAll<TEntity>(string table) =>
-        await QueryTable<TEntity>(table);
+    public virtual async Task<IEnumerable<TEntity>> GetAll<TEntity>(string table, int? commandTimeout = null) =>
+        await QueryTable<TEntity>(table, commandTimeout: commandTimeout);
 
     #endregion
 
@@ -206,14 +207,13 @@ public abstract class DbContext : IDbContext
     }
 
     public async Task<string> InitializeTempTable<T>(
-        IEnumerable<T> items,
-        string createTableSql)
+        IEnumerable<T> items, string createTableSql, int? bulkTimeout=null)
     {
         DataTable table = InitializeDatatable(items);
 
         using IDbConnection connection = Connect(); //new SqlConnection(_connectionString);
         SqlBulkCopy copier = new SqlBulkCopy(connection as SqlConnection);
-        copier.BulkCopyTimeout = 0;
+        copier.BulkCopyTimeout = bulkTimeout?? 0;
 
         foreach (var c in table.Columns.Cast<DataColumn>())
             copier.ColumnMappings.Add(c.ColumnName, c.ColumnName);
@@ -233,7 +233,7 @@ public abstract class DbContext : IDbContext
 
     public async Task<(int Updated, int Added)> UpdateOldAndAddNew<T>(
         List<T> items, string mainTable, string createTableSqlBody, string addAndUpdateSql,
-        Func<List<T>, string, Task>? PostAction = null)
+        Func<List<T>, string, Task>? PostAction = null, int? commandTimeout = null)
     {
         string tempTable = await InitializeTempTable(items, createTableSqlBody);
 
@@ -243,7 +243,7 @@ public abstract class DbContext : IDbContext
         addAndUpdateSql = addAndUpdateSql.Replace("{tempTable}", tempTable).Replace("{Table}", mainTable).Replace("{tempOld}", tempOld);
 
         var connection = Connect();
-        int[] counts = (await connection.QueryAsync<int>(addAndUpdateSql)).ToArray();
+        int[] counts = (await connection.QueryAsync<int>(addAndUpdateSql,commandTimeout:commandTimeout)).ToArray();
 
         if (PostAction is not null) await PostAction(items, tempTable);
 
