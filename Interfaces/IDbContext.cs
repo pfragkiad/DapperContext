@@ -12,7 +12,7 @@ public interface IDbContext
 
     Task<int> Execute(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = 0);
     Task<T?> ExecuteScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = 0);
-    Task<T?> QueryFirst<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout=null);
+    Task<T?> QueryFirst<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout=0);
     Task<IEnumerable<T>> Query<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = 0);
     Task<IEnumerable<T>> QueryProcedure<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = 0);
     Task<T?> QueryProcedureScalar<T>(string sql, object? parameters = null, IDbTransaction? transaction = null, int? commandTimeout = 0) where T : struct;
