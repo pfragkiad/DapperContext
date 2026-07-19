@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DapperContext.Interfaces;
+﻿namespace DapperContext.Interfaces;
 
 //public interface IRepository<T_Db> : IRepository<T_Db, T_Db> { }
 
