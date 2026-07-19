@@ -2,15 +2,9 @@
 using DapperContext.Attributes;
 using DapperContext.Interfaces;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
 
 namespace DapperContext.Contexts;
 
@@ -93,7 +87,7 @@ public abstract class DbContext : IDbContext
     }
 
     public virtual async Task<IEnumerable<T>> QueryTable<T>(string tableName, IDbTransaction? transaction = null, int? commandTimeout = 0) =>
-         await Query<T>($"select * from [{tableName}]", null, transaction);
+         await Query<T>($"select * from [{tableName}]", null, transaction, commandTimeout);
 
     #endregion
 
@@ -141,11 +135,14 @@ public abstract class DbContext : IDbContext
     {
         connection ??= Connect();
 
-        string sql = $"SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{tableName}'";
+        const string sql = """
+            SELECT COUNT(*)
+            FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_NAME = @tableName
+              AND (@schema IS NULL OR TABLE_SCHEMA = @schema)
+            """;
 
-        if (!string.IsNullOrWhiteSpace(schema)) sql += $" and table_schema = '{schema}'";
-
-        int rows = connection.ExecuteScalar<int>(sql);
+        int rows = connection.ExecuteScalar<int>(sql, new { tableName, schema });
         return rows > 0;
     }
 
@@ -195,16 +192,13 @@ public abstract class DbContext : IDbContext
 
     public string GetNewTempTableName(string tableNamePrefix)
     {
-        var connection = Connect();
+        using var connection = Connect();
 
         while (true)
         {
             int i = Random.Shared.Next();
             if (!TableExists($"{tableNamePrefix}_{i}", connection: connection))
-            {
-                connection.Close();
                 return $"{tableNamePrefix}_{i}";
-            }
         }
     }
 
